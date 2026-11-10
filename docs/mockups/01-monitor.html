@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Monitor</title>
+</head>
+<body>
+<style>
+body{margin:0;background:#0F1424;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button{font-family:inherit}
+</style>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#0F1424;color:#EEF0F8;display:flex;flex-direction:column;padding:20px 20px 0 20px;gap:18px;overflow:hidden">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <span style="font-size:13px;color:#A3AACB;letter-spacing:.04em">Happy Silent Roommate</span>
+      <span style="font-size:24px;font-weight:700">Quiet evening</span>
+    </div>
+    <button aria-label="Settings" style="width:44px;height:44px;border-radius:22px;border:0;background:#181F36;color:#EEF0F8;display:flex;align-items:center;justify-content:center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;background:#181F36;border-radius:16px;padding:12px 16px">
+    <span style="width:10px;height:10px;border-radius:5px;background:#5DD6B5;flex:none"></span>
+    <div style="display:flex;flex-direction:column;flex-grow:1">
+      <span style="font-size:15px;font-weight:600">Listening</span>
+      <span style="font-size:13px;color:#A3AACB">Window 21:00 – 23:30 · stops automatically</span>
+    </div>
+  </div>
+
+  <div style="background:#181F36;border-radius:24px;padding:22px 20px 20px;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between">
+      <div style="display:flex;align-items:baseline;gap:6px">
+        <span style="font-size:60px;font-weight:700;line-height:1;letter-spacing:-.02em">47</span>
+        <span style="font-size:18px;color:#A3AACB">dB(A)</span>
+      </div>
+      <span style="font-size:13px;color:#A3AACB">avg over 8 s</span>
+    </div>
+
+    <div style="position:relative;height:28px">
+      <div style="position:absolute;left:0;right:0;top:8px;height:12px;border-radius:6px;background:#2A3358"></div>
+      <div style="position:absolute;left:0;top:8px;width:34%;height:12px;border-radius:6px;background:#5DD6B5"></div>
+      <div style="position:absolute;left:56%;top:0;width:3px;height:28px;border-radius:2px;background:#F5B454"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#A3AACB">
+      <span>quiet</span>
+      <span style="color:#F5B454;font-weight:600;margin-left:60px">limit 58</span>
+      <span>loud</span>
+    </div>
+
+    <svg width="100%" height="64" viewBox="0 0 320 64" preserveAspectRatio="none" role="img" aria-label="Level over the last minute, mostly well below the limit">
+      <line x1="0" y1="26" x2="320" y2="26" stroke="#F5B454" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <g fill="#5DD6B5">
+        <rect x="2" y="44" width="8" height="20" rx="2"/><rect x="14" y="40" width="8" height="24" rx="2"/><rect x="26" y="46" width="8" height="18" rx="2"/><rect x="38" y="36" width="8" height="28" rx="2"/><rect x="50" y="42" width="8" height="22" rx="2"/><rect x="62" y="38" width="8" height="26" rx="2"/><rect x="74" y="44" width="8" height="20" rx="2"/><rect x="86" y="34" width="8" height="30" rx="2"/><rect x="98" y="40" width="8" height="24" rx="2"/><rect x="110" y="47" width="8" height="17" rx="2"/><rect x="122" y="43" width="8" height="21" rx="2"/><rect x="134" y="39" width="8" height="25" rx="2"/><rect x="146" y="45" width="8" height="19" rx="2"/>
+      </g>
+      <g fill="#FF8A7A">
+        <rect x="158" y="18" width="8" height="46" rx="2"/><rect x="170" y="12" width="8" height="52" rx="2"/><rect x="182" y="20" width="8" height="44" rx="2"/>
+      </g>
+      <g fill="#5DD6B5">
+        <rect x="194" y="36" width="8" height="28" rx="2"/><rect x="206" y="42" width="8" height="22" rx="2"/><rect x="218" y="38" width="8" height="26" rx="2"/><rect x="230" y="45" width="8" height="19" rx="2"/><rect x="242" y="41" width="8" height="23" rx="2"/><rect x="254" y="44" width="8" height="20" rx="2"/><rect x="266" y="37" width="8" height="27" rx="2"/><rect x="278" y="43" width="8" height="21" rx="2"/><rect x="290" y="40" width="8" height="24" rx="2"/><rect x="302" y="46" width="8" height="18" rx="2"/>
+      </g>
+    </svg>
+    <span style="font-size:12px;color:#A3AACB">Last 60 s. Only levels are kept, never audio.</span>
+  </div>
+
+  <div style="background:#181F36;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <label for="thr" style="font-size:15px;font-weight:600">Limit</label>
+      <span style="font-size:14px;color:#F5B454;font-weight:600">+14 dB above your whisper</span>
+    </div>
+    <input id="thr" type="range" min="6" max="30" value="14" style="width:100%;height:32px;accent-color:#F5B454;margin:0">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#A3AACB"><span>strict</span><span>relaxed</span></div>
+  </div>
+
+  <div style="display:flex;gap:10px">
+    <button style="flex:1;height:52px;border-radius:16px;border:0;background:#212A47;color:#EEF0F8;font-size:15px;font-weight:600">Pause 1 h</button>
+    <button style="flex:1;height:52px;border-radius:16px;border:0;background:#F5B454;color:#1A1405;font-size:15px;font-weight:700">Whisper test</button>
+  </div>
+
+  <div style="flex-grow:1"></div>
+
+  <div style="display:flex;border-top:1px solid #2A3358;margin:0 -20px;padding:8px 20px 14px;background:#0F1424">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:#F5B454;font-size:12px;font-weight:600;padding:4px 0">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 12h3l3-7 4 14 3-7h5"/></svg>Monitor
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:#A3AACB;font-size:12px;padding:4px 0">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Tonight
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:#A3AACB;font-size:12px;padding:4px 0">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Schedule
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:#A3AACB;font-size:12px;padding:4px 0">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 12h2M6 8v8M10 5v14M14 8v8M18 10v4M22 12h0"/></svg>Alerts
+    </div>
+  </div>
+</div>
+</body>
+</html>

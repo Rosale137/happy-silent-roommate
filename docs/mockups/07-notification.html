@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Notification and tile</title>
+<style>
+body{margin:0;background:#0F1424;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button{font-family:inherit}
+.tile{width:84px;height:84px;border-radius:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:600}
+.tile.on{background:#5DD6B5;color:#06241C}
+.tile.off{background:#2A3358;color:#EEF0F8}
+.note{background:#232C4B;border-radius:22px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.act{height:36px;padding:0 14px;border-radius:18px;border:0;background:#323C63;color:#EEF0F8;font-size:13px;font-weight:600}
+</style>
+</head>
+<body>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#0A0E1B;color:#EEF0F8;display:flex;flex-direction:column;padding:28px 16px 16px;gap:14px;overflow:hidden">
+
+  <span style="font-size:13px;color:#A3AACB;padding-left:6px">Notification shade (mock)</span>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div class="tile on">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M2 12h2M6 8v8M10 5v14M14 8v8M18 10v4M22 12h0"/></svg>
+      <span>Roommate</span>
+    </div>
+    <div class="tile off">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M5 12a7 7 0 0 1 14 0v4l2 2H3l2-2z"/></svg>
+      <span>Alarm off</span>
+    </div>
+    <div class="tile off">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span>Auto</span>
+    </div>
+  </div>
+  <span style="font-size:12px;color:#A3AACB;padding-left:6px">Quick-settings tile: tap to pause or resume listening, long-press opens the app.</span>
+
+  <div class="note">
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#A3AACB">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5DD6B5" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12h2M6 8v8M10 5v14M14 8v8M18 10v4M22 12h0"/></svg>
+      <span>Happy Silent Roommate · now</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <b style="font-size:16px">Listening until 23:30</b>
+      <span style="font-size:14px;color:#C9CEE6">47 dB(A) · limit 58 · 1 alert tonight</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="act">Pause 1 h</button>
+      <button class="act">Stop for tonight</button>
+    </div>
+  </div>
+
+  <div class="note">
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#A3AACB">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5B454" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span>Happy Silent Roommate · 20:55</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <b style="font-size:16px">Quick whisper test?</b>
+      <span style="font-size:14px;color:#C9CEE6">Your last one was 9 days ago. Takes 5 seconds.</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="act">Whisper now</button>
+      <button class="act">Tomorrow</button>
+    </div>
+  </div>
+
+  <div class="note" style="opacity:.9">
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#A3AACB">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A3AACB" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12h2M6 8v8M10 5v14M14 8v8M18 10v4M22 12h0"/></svg>
+      <span>Happy Silent Roommate · 23:30</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <b style="font-size:16px">Good night. Listening stopped.</b>
+      <span style="font-size:14px;color:#C9CEE6">3 alerts tonight, 94% quiet.</span>
+    </div>
+  </div>
+
+  <div style="flex-grow:1"></div>
+  <span style="font-size:12px;color:#A3AACB;padding-left:6px;line-height:1.4">The first notification is the foreground-service one Android requires while the microphone is in use. It cannot be hidden, so it is made useful.</span>
+</div>
+</body>
+</html>

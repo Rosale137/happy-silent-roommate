@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "com.examplehappy_silent_roommate"
+    namespace = "io.github.rosale137.happysilentroommate"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.examplehappy_silent_roommate"
+        applicationId = "io.github.rosale137.happysilentroommate"
         minSdk = 24
         targetSdk = 37
         versionCode = 1

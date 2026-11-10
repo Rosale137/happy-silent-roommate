@@ -1,4 +1,4 @@
-package com.examplehappy_silent_roommate.ui.theme
+package io.github.rosale137.happysilentroommate.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Quiet windows</title>
+<style>
+body{margin:0;background:#0F1424;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button{font-family:inherit}
+.chip{width:40px;height:40px;border-radius:20px;border:0;font-size:13px;font-weight:600;background:#212A47;color:#C9CEE6}
+.chip.on{background:#5DD6B5;color:#06241C}
+.t{background:#212A47;border-radius:12px;padding:10px 14px;font-size:18px;font-weight:700}
+</style>
+</head>
+<body>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#0F1424;color:#EEF0F8;display:flex;flex-direction:column;padding:20px;gap:16px;overflow:hidden">
+
+  <div style="display:flex;align-items:center;gap:8px;padding-top:8px">
+    <button aria-label="Back" style="width:44px;height:44px;border-radius:22px;border:0;background:#181F36;color:#EEF0F8;display:flex;align-items:center;justify-content:center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <span style="font-size:20px;font-weight:700">Quiet windows</span>
+  </div>
+
+  <p style="margin:0;font-size:14px;line-height:1.5;color:#A3AACB">The app starts listening at the start time and stops at the end time on its own. Outside a window the microphone is not used.</p>
+
+  <div style="background:#181F36;border-radius:22px;padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:16px;font-weight:700">Weekdays</span>
+      <span style="width:48px;height:28px;border-radius:14px;background:#5DD6B5;position:relative"><span style="position:absolute;right:3px;top:3px;width:22px;height:22px;border-radius:11px;background:#0F1424"></span></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="t">21:00</span><span style="color:#A3AACB">to</span><span class="t">23:30</span>
+    </div>
+    <div style="display:flex;justify-content:space-between">
+      <button class="chip on" aria-label="Monday, on">Mo</button><button class="chip on" aria-label="Tuesday, on">Tu</button><button class="chip on" aria-label="Wednesday, on">We</button><button class="chip on" aria-label="Thursday, on">Th</button><button class="chip on" aria-label="Friday, on">Fr</button><button class="chip" aria-label="Saturday, off">Sa</button><button class="chip" aria-label="Sunday, off">Su</button>
+    </div>
+  </div>
+
+  <div style="background:#181F36;border-radius:22px;padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:16px;font-weight:700">Weekend</span>
+      <span style="width:48px;height:28px;border-radius:14px;background:#5DD6B5;position:relative"><span style="position:absolute;right:3px;top:3px;width:22px;height:22px;border-radius:11px;background:#0F1424"></span></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="t">22:00</span><span style="color:#A3AACB">to</span><span class="t">01:00</span><span style="font-size:12px;color:#A3AACB">next day</span>
+    </div>
+    <div style="display:flex;justify-content:space-between">
+      <button class="chip" aria-label="Monday, off">Mo</button><button class="chip" aria-label="Tuesday, off">Tu</button><button class="chip" aria-label="Wednesday, off">We</button><button class="chip" aria-label="Thursday, off">Th</button><button class="chip" aria-label="Friday, off">Fr</button><button class="chip on" aria-label="Saturday, on">Sa</button><button class="chip on" aria-label="Sunday, on">Su</button>
+    </div>
+  </div>
+
+  <button style="height:52px;border-radius:16px;border:2px dashed #3A4570;background:transparent;color:#EEF0F8;font-size:15px;font-weight:600">+ Add window</button>
+
+  <div style="background:#181F36;border-radius:20px;padding:14px 18px;display:flex;align-items:center;gap:12px;opacity:.85">
+    <div style="display:flex;flex-direction:column;gap:2px;flex-grow:1">
+      <span style="font-size:15px;font-weight:600">Only when I am at home</span>
+      <span style="font-size:12px;color:#A3AACB">Coming later, needs location permission</span>
+    </div>
+    <span style="width:48px;height:28px;border-radius:14px;background:#2A3358;position:relative;flex:none"><span style="position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:11px;background:#6C749A"></span></span>
+  </div>
+
+  <div style="flex-grow:1"></div>
+  <span style="font-size:12px;color:#A3AACB;text-align:center;margin-bottom:8px">Next start: today 21:00</span>
+</div>
+</body>
+</html>

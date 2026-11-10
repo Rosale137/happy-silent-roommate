@@ -1,4 +1,4 @@
-package com.examplehappy_silent_roommate
+package io.github.rosale137.happysilentroommate
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.examplehappy_silent_roommate", appContext.packageName)
+        assertEquals("io.github.rosale137.happysilentroommate", appContext.packageName)
     }
 }
