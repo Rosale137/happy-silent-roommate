@@ -39,7 +39,10 @@ import io.github.rosale137.happysilentroommate.settings.Settings
 import io.github.rosale137.happysilentroommate.ui.theme.Amber
 import io.github.rosale137.happysilentroommate.ui.theme.Coral
 import io.github.rosale137.happysilentroommate.ui.theme.HappysilentroommateTheme
+import io.github.rosale137.happysilentroommate.monitor.MonitorState
 import io.github.rosale137.happysilentroommate.ui.theme.Surface1
+import io.github.rosale137.happysilentroommate.ui.theme.Surface2
+import io.github.rosale137.happysilentroommate.ui.theme.TextPrimary
 import io.github.rosale137.happysilentroommate.ui.theme.Teal
 import io.github.rosale137.happysilentroommate.ui.theme.TextMuted
 import io.github.rosale137.happysilentroommate.ui.theme.Track
@@ -82,6 +85,16 @@ private const val ALERTS_HELP =
         "Tip: a shorter integration time (the shaded band) makes the buzzes stop sooner " +
         "once you are quieter."
 
+private const val LISTENING_HELP =
+    "Start listening keeps the app checking the volume and buzzing when the screen is off " +
+        "or you switch to another app.\n\n" +
+        "Android shows a notification while the microphone is in use. It shows the number of " +
+        "buzzes, turns coral while you are too loud (on phones that allow coloured notifications) " +
+        "and has a Stop button.\n\n" +
+        "With Do Not Disturb on, the phone does not vibrate; the notification and the screen " +
+        "still show when you are too loud.\n\n" +
+        "Still nothing is recorded: only the level number is calculated, on this phone."
+
 private const val PRIVACY_HELP =
     "Nothing is recorded or stored. Only a level number is calculated, on this phone, " +
         "and it is gone a moment later."
@@ -93,18 +106,22 @@ private const val PRIVACY_HELP =
 @Composable
 fun MonitorScreen(
     micGranted: Boolean,
-    micError: String?,
-    powers: List<Double>,
+    state: MonitorState,
     settings: Settings,
     onSettingsChange: (Settings) -> Unit,
     onRequestMic: () -> Unit,
+    listening: Boolean,
+    onStartListening: () -> Unit,
+    onStopListening: () -> Unit,
     nextTestStrength: AlertStrength,
     onTestVibration: () -> Unit,
-    alertCount: Int,
-    lastAlertAt: Long?,
-    lastAlertStrength: AlertStrength?,
     modifier: Modifier = Modifier,
 ) {
+    val powers = state.powers
+    val micError = state.micError
+    val alertCount = state.alertCount
+    val lastAlertAt = state.lastAlertAt
+    val lastAlertStrength = state.lastAlertStrength
     val average = averageDb(powers, settings.windowChunks)
     val above = average > settings.limitDb
     val levelColor = if (above) Coral else Teal
@@ -137,6 +154,35 @@ fun MonitorScreen(
                 Button(onClick = onRequestMic) { Text("Allow microphone") }
             }
             return@Column
+        }
+
+        Card(spacing = 12.dp) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        if (listening) "Listening in the background" else "Only while this screen is open",
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (listening) Teal else TextPrimary,
+                    )
+                    Text(
+                        if (listening) "The screen can go off. Stop it here or in the notification."
+                        else "Start listening to keep going with the screen off.",
+                        color = TextMuted,
+                        fontSize = 13.sp,
+                    )
+                }
+                InfoButton(title = "Listening in the background", text = LISTENING_HELP)
+            }
+            Button(
+                onClick = if (listening) onStopListening else onStartListening,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (listening) Surface2 else Teal,
+                    contentColor = if (listening) TextPrimary else MaterialTheme.colorScheme.onPrimary,
+                ),
+            ) { Text(if (listening) "Stop listening" else "Start listening", fontWeight = FontWeight.Bold) }
         }
 
         Card(spacing = 12.dp, padding = 20.dp) {
@@ -365,16 +411,20 @@ fun MonitorScreenPreview() {
     HappysilentroommateTheme {
         MonitorScreen(
             micGranted = true,
-            micError = null,
-            powers = powers,
+            state = MonitorState(
+                powers = powers,
+                alertCount = 3,
+                lastAlertAt = 0L,
+                lastAlertStrength = AlertStrength.Medium,
+            ),
             settings = Settings(),
             onSettingsChange = {},
             onRequestMic = {},
+            listening = false,
+            onStartListening = {},
+            onStopListening = {},
             nextTestStrength = AlertStrength.Gentle,
             onTestVibration = {},
-            alertCount = 3,
-            lastAlertAt = 0L,
-            lastAlertStrength = AlertStrength.Medium,
         )
     }
 }

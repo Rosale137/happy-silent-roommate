@@ -5,7 +5,10 @@ import io.github.rosale137.happysilentroommate.audio.averageDb
 import io.github.rosale137.happysilentroommate.audio.meanSquare
 import io.github.rosale137.happysilentroommate.audio.movingAverageDb
 import io.github.rosale137.happysilentroommate.audio.powerToDb
+import io.github.rosale137.happysilentroommate.audio.averageDbOrNull
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LevelMathTest {
@@ -47,6 +50,21 @@ class LevelMathTest {
         assertEquals(0.0, series[1], 0.001)
         assertEquals(powerToDb((1.0 + 1e-6) / 2), series[2], 0.001)
         assertEquals(powerToDb(1e-6), series[3], 0.001)
+    }
+
+    @Test
+    fun ignoredReadingsAreLeftOutOfTheAverage() {
+        val powers = listOf(1e-6, Double.NaN, Double.NaN, 1e-6)
+        assertEquals(powerToDb(1e-6), averageDb(powers, 4), 0.001)
+        assertEquals(powerToDb(1e-6), movingAverageDb(powers, 4).last(), 0.001)
+    }
+
+    @Test
+    fun onlyIgnoredReadingsGiveNoLevel() {
+        val powers = listOf(1e-6, Double.NaN, Double.NaN)
+        assertNull(averageDbOrNull(powers, 2))
+        assertEquals(FLOOR_DBFS, averageDb(powers, 2), 0.0)
+        assertTrue(movingAverageDb(powers, 2).last().isNaN())
     }
 
     @Test

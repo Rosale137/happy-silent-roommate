@@ -28,10 +28,15 @@ Completed:
 - The screen flashes with every buzz, plus a buzz counter (handy on the emulator)
 - Settings are saved on the phone
 - Test-vibration button that plays the three patterns in turn
+- Listening in the background (foreground service): keeps going with the screen off, started and
+  stopped in the app; the notification shows the buzz count, turns coral while too loud and has a
+  Stop button
+- The app ignores the microphone while the phone vibrates, so its own buzz never triggers the next one
+- Tested on a Pixel 8 with Murena /e/OS (Android 15). With Do Not Disturb on, the phone does not vibrate
 - HTML mockups of the planned screens in `docs/mockups` (open `index.html`)
 
-In progress:
-- Foreground service, so it keeps listening with the screen off
+Next:
+- Whisper test as a reference line for the limit
 
 ## Planned Features
 
@@ -42,7 +47,7 @@ Built step by step; each step is runnable on its own.
 - [x] Adjustable volume limit
 - [x] Vibration feedback when the limit is exceeded
 - [x] Reminders that speed up and get stronger while you stay too loud, with hysteresis
-- [ ] Foreground service, so it keeps listening with the screen off
+- [x] Foreground service, so it keeps listening with the screen off
 - [ ] Whisper test as a reference line; the limit is stored relative to it, with a "limit follows whisper" switch
 - [ ] Configurable quiet hours (several windows and weekdays), automatic start and stop
 - [ ] Settings screen: choice of vibration patterns, pause button, units
@@ -66,7 +71,7 @@ Built step by step; each step is runnable on its own.
 
 Sideload for now: build with `./gradlew assembleDebug` and install
 `app/build/outputs/apk/debug/app-debug.apk` (for example `adb install -r`). It needs only
-the microphone and vibration permissions, no Google services, so it also runs on Murena /e/OS.
+the microphone, vibration and notification permissions, no Google services, so it also runs on Murena /e/OS.
 
 ## Development
 

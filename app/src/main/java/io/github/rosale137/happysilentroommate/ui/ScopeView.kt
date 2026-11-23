@@ -183,16 +183,24 @@ fun ScopeView(
 
             if (powers.size >= 2) {
                 // Level per chunk, thin.
+                // NaN = ignored while the phone vibrated: leave a gap there.
                 val raw = Path()
+                var penDown = false
                 powers.forEachIndexed { i, p ->
+                    if (p.isNaN()) {
+                        penDown = false
+                        return@forEachIndexed
+                    }
                     val px = x(i)
                     val py = y(powerToDb(p).toFloat())
-                    if (i == 0) raw.moveTo(px, py) else raw.lineTo(px, py)
+                    if (penDown) raw.lineTo(px, py) else raw.moveTo(px, py)
+                    penDown = true
                 }
                 drawPath(raw, TextMuted.copy(alpha = 0.55f), style = Stroke(width = 1.dp.toPx()))
 
                 // Integrated level, thick, coral where above the limit.
                 for (i in 1 until averaged.size) {
+                    if (averaged[i].isNaN() || averaged[i - 1].isNaN()) continue
                     drawLine(
                         color = if (averaged[i] > limitDb) Coral else Teal,
                         start = Offset(x(i - 1), y(averaged[i - 1].toFloat())),
