@@ -40,6 +40,8 @@ import io.github.rosale137.happysilentroommate.ui.theme.Amber
 import io.github.rosale137.happysilentroommate.ui.theme.Coral
 import io.github.rosale137.happysilentroommate.ui.theme.HappysilentroommateTheme
 import io.github.rosale137.happysilentroommate.monitor.MonitorState
+import io.github.rosale137.happysilentroommate.monitor.ServiceStatus
+import io.github.rosale137.happysilentroommate.schedule.QuietWindow
 import io.github.rosale137.happysilentroommate.ui.theme.Surface1
 import io.github.rosale137.happysilentroommate.ui.theme.Surface2
 import io.github.rosale137.happysilentroommate.ui.theme.TextPrimary
@@ -91,6 +93,8 @@ private const val LISTENING_HELP =
         "Android shows a notification while the microphone is in use. It shows the number of " +
         "buzzes, turns coral while you are too loud (on phones that allow coloured notifications) " +
         "and has a Stop button.\n\n" +
+        "With the quiet time switched on, this starts and stops on its own. " +
+        "\"Stop for tonight\" ends it until the next quiet time.\n\n" +
         "With Do Not Disturb on, the phone does not vibrate; the notification and the screen " +
         "still show when you are too loud.\n\n" +
         "Still nothing is recorded: only the level number is calculated, on this phone."
@@ -110,9 +114,10 @@ fun MonitorScreen(
     settings: Settings,
     onSettingsChange: (Settings) -> Unit,
     onRequestMic: () -> Unit,
-    listening: Boolean,
+    status: ServiceStatus,
     onStartListening: () -> Unit,
     onStopListening: () -> Unit,
+    onStopForTonight: () -> Unit,
     nextTestStrength: AlertStrength,
     onTestVibration: () -> Unit,
     modifier: Modifier = Modifier,
@@ -156,34 +161,13 @@ fun MonitorScreen(
             return@Column
         }
 
-        Card(spacing = 12.dp) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        if (listening) "Listening in the background" else "Only while this screen is open",
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (listening) Teal else TextPrimary,
-                    )
-                    Text(
-                        if (listening) "The screen can go off. Stop it here or in the notification."
-                        else "Start listening to keep going with the screen off.",
-                        color = TextMuted,
-                        fontSize = 13.sp,
-                    )
-                }
-                InfoButton(title = "Listening in the background", text = LISTENING_HELP)
-            }
-            Button(
-                onClick = if (listening) onStopListening else onStartListening,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (listening) Surface2 else Teal,
-                    contentColor = if (listening) TextPrimary else MaterialTheme.colorScheme.onPrimary,
-                ),
-            ) { Text(if (listening) "Stop listening" else "Start listening", fontWeight = FontWeight.Bold) }
-        }
+        ListeningCard(
+            status = status,
+            settings = settings,
+            onStartListening = onStartListening,
+            onStopListening = onStopListening,
+            onStopForTonight = onStopForTonight,
+        )
 
         Card(spacing = 12.dp, padding = 20.dp) {
             Row(verticalAlignment = Alignment.Bottom) {
@@ -259,6 +243,8 @@ fun MonitorScreen(
                 },
             )
         }
+
+        QuietTimeCard(settings = settings, onSettingsChange = onSettingsChange)
 
         Button(
             onClick = onTestVibration,
@@ -384,8 +370,56 @@ private fun LabeledSlider(
     }
 }
 
+/** Status line and the one button that fits it: start, stop, or stop for tonight. */
 @Composable
-private fun Card(
+private fun ListeningCard(
+    status: ServiceStatus,
+    settings: Settings,
+    onStartListening: () -> Unit,
+    onStopListening: () -> Unit,
+    onStopForTonight: () -> Unit,
+) {
+    val start = QuietWindow.format(settings.quietStartMin)
+    val end = QuietWindow.format(settings.quietEndMin)
+    val (title, detail) = when (status) {
+        ServiceStatus.Off -> "Only while this screen is open" to
+            "Start listening to keep going with the screen off."
+        ServiceStatus.Waiting -> "Waiting for quiet time" to
+            "Listens on its own from $start to $end. Microphone off until then."
+        ServiceStatus.ListeningAuto -> "Quiet time: listening until $end" to
+            "The screen can go off. It stops on its own at $end."
+        ServiceStatus.ListeningManual -> "Listening in the background" to
+            "The screen can go off. Stop it here or in the notification."
+    }
+    Card(spacing = 12.dp) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(title, fontWeight = FontWeight.SemiBold, color = if (status.listening) Teal else TextPrimary)
+                Text(detail, color = TextMuted, fontSize = 13.sp)
+            }
+            InfoButton(title = "Listening in the background", text = LISTENING_HELP)
+        }
+        val (label, onClick) = when (status) {
+            ServiceStatus.Off -> "Start listening" to onStartListening
+            ServiceStatus.Waiting -> "Start listening now" to onStartListening
+            ServiceStatus.ListeningAuto -> "Stop for tonight" to onStopForTonight
+            ServiceStatus.ListeningManual -> "Stop listening" to onStopListening
+        }
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (status.listening) Surface2 else Teal,
+                contentColor = if (status.listening) TextPrimary else MaterialTheme.colorScheme.onPrimary,
+            ),
+        ) { Text(label, fontWeight = FontWeight.Bold) }
+    }
+}
+
+@Composable
+internal fun Card(
     spacing: Dp = 4.dp,
     padding: Dp = 16.dp,
     content: @Composable () -> Unit,
@@ -420,9 +454,10 @@ fun MonitorScreenPreview() {
             settings = Settings(),
             onSettingsChange = {},
             onRequestMic = {},
-            listening = false,
+            status = ServiceStatus.Off,
             onStartListening = {},
             onStopListening = {},
+            onStopForTonight = {},
             nextTestStrength = AlertStrength.Gentle,
             onTestVibration = {},
         )

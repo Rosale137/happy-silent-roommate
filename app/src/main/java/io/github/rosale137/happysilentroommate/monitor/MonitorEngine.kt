@@ -10,6 +10,8 @@ import io.github.rosale137.happysilentroommate.audio.averageDbOrNull
 import io.github.rosale137.happysilentroommate.haptics.Haptics
 import io.github.rosale137.happysilentroommate.settings.Settings
 import io.github.rosale137.happysilentroommate.settings.SettingsStore
+import io.github.rosale137.happysilentroommate.schedule.QuietTimeScheduler
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -21,11 +23,29 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+
+/** What the background service is doing. */
+enum class ServiceStatus {
+    Off,
+
+    /** Running in standby, outside the quiet time: microphone off. */
+    Waiting,
+
+    /** Started by hand with "Start listening". */
+    ListeningManual,
+
+    /** Started by the quiet time; stops on its own at the end. */
+    ListeningAuto;
+
+    val listening: Boolean get() = this == ListeningManual || this == ListeningAuto
+}
 
 /** Everything the screen and the notification show. Numbers only, never audio. */
 data class MonitorState(
@@ -79,8 +99,10 @@ object MonitorEngine {
     private val _settings = MutableStateFlow(Settings())
     val settings: StateFlow<Settings> = _settings.asStateFlow()
 
-    /** Set by [MonitorService] while it runs. */
-    val serviceRunning = MutableStateFlow(false)
+    /** Set by [MonitorService]. */
+    val serviceStatus = MutableStateFlow(ServiceStatus.Off)
+
+    private val settingsLoaded = CompletableDeferred<Unit>()
 
     private val _buzzes = MutableSharedFlow<AlertStrength>(extraBufferCapacity = 8)
 
@@ -97,8 +119,23 @@ object MonitorEngine {
         val store = SettingsStore(app)
         scope.launch {
             _settings.value = store.load()
+            settingsLoaded.complete(Unit)
             _settings.drop(1).debounce(SAVE_DELAY_MS).collect { store.save(it) }
         }
+        // Keep the quiet-time alarm in step with the settings.
+        scope.launch {
+            settingsLoaded.await()
+            _settings
+                .map { listOf(it.autoEnabled, it.quietStartMin, it.quietEndMin, it.autoMode) }
+                .distinctUntilChanged()
+                .collect { QuietTimeScheduler.update(app, _settings.value) }
+        }
+    }
+
+    /** The saved settings, once they are loaded. Call [init] first. */
+    suspend fun awaitSettings(): Settings {
+        settingsLoaded.await()
+        return _settings.value
     }
 
     fun updateSettings(settings: Settings) {

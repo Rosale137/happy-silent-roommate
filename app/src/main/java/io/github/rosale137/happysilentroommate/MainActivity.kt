@@ -1,6 +1,7 @@
 package io.github.rosale137.happysilentroommate
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color as AndroidColor
 import android.os.Build
@@ -32,6 +33,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import io.github.rosale137.happysilentroommate.alerts.AlertStrength
 import io.github.rosale137.happysilentroommate.monitor.MonitorEngine
 import io.github.rosale137.happysilentroommate.monitor.MonitorService
+import io.github.rosale137.happysilentroommate.monitor.ServiceStatus
+import io.github.rosale137.happysilentroommate.settings.AutoMode
+import io.github.rosale137.happysilentroommate.settings.Settings
 import io.github.rosale137.happysilentroommate.ui.MonitorScreen
 import io.github.rosale137.happysilentroommate.ui.theme.Coral
 import io.github.rosale137.happysilentroommate.ui.theme.HappysilentroommateTheme
@@ -40,9 +44,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
- * Step 3: the screen shows and adjusts what [MonitorEngine] does. While the app is visible it
- * listens itself; "Start listening" hands the microphone to [MonitorService], which keeps going
- * with the screen off.
+ * The screen shows and adjusts what [MonitorEngine] does. While the app is visible and the
+ * service is not listening, the screen listens itself. [MonitorService] keeps going with the
+ * screen off, started by hand or by the quiet time.
  */
 class MainActivity : ComponentActivity() {
 
@@ -54,9 +58,13 @@ class MainActivity : ComponentActivity() {
     private val micPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { micGranted = it }
 
-    /** Asked once before the first background start; the service starts either way. */
+    /** What to do once the notification permission was answered; it goes ahead either way. */
+    private var afterNotificationPermission: (() -> Unit)? = null
     private val notificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { MonitorService.start(this) }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            afterNotificationPermission?.invoke()
+            afterNotificationPermission = null
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,13 +74,26 @@ class MainActivity : ComponentActivity() {
         )
         MonitorEngine.init(this)
         micGranted = hasPermission(Manifest.permission.RECORD_AUDIO)
+        handleIntent(intent)
 
-        // While visible and the service is not running, the screen listens itself.
+        // While visible and the service is not listening, the screen listens itself.
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                combine(snapshotFlow { micGranted }, MonitorEngine.serviceRunning) { granted, running ->
-                    granted && !running
+                combine(snapshotFlow { micGranted }, MonitorEngine.serviceStatus) { granted, status ->
+                    granted && !status.listening
                 }.collectLatest { listenHere -> if (listenHere) MonitorEngine.listen() }
+            }
+        }
+
+        // Opening the app switches standby on again if it is not running (e.g. after a restart).
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                val s = MonitorEngine.awaitSettings()
+                if (micGranted && s.autoEnabled && s.autoMode == AutoMode.Standby &&
+                    MonitorEngine.serviceStatus.value == ServiceStatus.Off
+                ) {
+                    MonitorService.startAuto(this@MainActivity)
+                }
             }
         }
 
@@ -80,7 +101,7 @@ class MainActivity : ComponentActivity() {
             HappysilentroommateTheme {
                 val state by MonitorEngine.state.collectAsState()
                 val settings by MonitorEngine.settings.collectAsState()
-                val listening by MonitorEngine.serviceRunning.collectAsState()
+                val status by MonitorEngine.serviceStatus.collectAsState()
 
                 // Visual twin of the vibration: a coral wash over the whole screen that fades out.
                 val flash = remember { Animatable(0f) }
@@ -109,11 +130,12 @@ class MainActivity : ComponentActivity() {
                         micGranted = micGranted,
                         state = state,
                         settings = settings,
-                        onSettingsChange = MonitorEngine::updateSettings,
+                        onSettingsChange = ::changeSettings,
                         onRequestMic = { micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO) },
-                        listening = listening,
-                        onStartListening = ::startListening,
+                        status = status,
+                        onStartListening = { withNotificationPermission { MonitorService.startManual(this) } },
                         onStopListening = { MonitorService.stop(this) },
+                        onStopForTonight = { MonitorService.stopForTonight(this) },
                         nextTestStrength = nextTestStrength,
                         onTestVibration = {
                             MonitorEngine.testBuzz(nextTestStrength)
@@ -128,20 +150,50 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun startListening() {
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    /** The reminder notification opens the app with this action: start the quiet time now. */
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.action == ACTION_START_QUIET_TIME && micGranted) {
+            MonitorService.startAuto(this)
+            intent.action = null
+        }
+    }
+
+    private fun changeSettings(new: Settings) {
+        val old = MonitorEngine.settings.value
+        MonitorEngine.updateSettings(new)
+        val quietTimeChanged = new.autoEnabled != old.autoEnabled || new.autoMode != old.autoMode
+        if (!quietTimeChanged || !new.autoEnabled || !micGranted) return
+        // Both modes need notifications; standby starts its service now, while the app is open.
+        withNotificationPermission {
+            if (new.autoMode == AutoMode.Standby &&
+                MonitorEngine.serviceStatus.value == ServiceStatus.Off
+            ) {
+                MonitorService.startAuto(this)
+            }
+        }
+    }
+
+    private fun withNotificationPermission(action: () -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             !hasPermission(Manifest.permission.POST_NOTIFICATIONS)
         ) {
+            afterNotificationPermission = action
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         } else {
-            MonitorService.start(this)
+            action()
         }
     }
 
     private fun hasPermission(permission: String) =
         ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
-    private companion object {
-        const val FLASH_FADE_MS = 1200
+    companion object {
+        const val ACTION_START_QUIET_TIME = "io.github.rosale137.happysilentroommate.START_QUIET_TIME"
+        private const val FLASH_FADE_MS = 1200
     }
 }

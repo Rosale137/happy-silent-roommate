@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App icon variants</title>
+<style>
+:root{--navy:#0F1424;--amber:#F5B454;--teal:#5DD6B5;--coral:#FF8A7A;--muted:#A3AACB;--text:#EEF0F8;--line:#2A3358}
+body{margin:0;background:#070A14;color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:32px}
+h1{margin:0 0 6px;font-size:28px}
+p.lead{margin:0 0 28px;color:var(--muted);max-width:75ch;line-height:1.5}
+section{border:1px solid var(--line);border-radius:20px;padding:20px 24px;margin-bottom:24px;background:#0B0F1C}
+h2{margin:0 0 4px;font-size:20px}
+section > p{margin:0 0 18px;color:var(--muted);font-size:14px;max-width:75ch;line-height:1.45}
+.row{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-end}
+figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px}
+figcaption{font-size:12px;color:var(--muted)}
+.icon{display:block;overflow:hidden}
+.icon svg{display:block;width:100%;height:100%}
+.circle{border-radius:50%}
+.squircle{border-radius:30%}
+.square{border-radius:14%}
+.mono-bg{background:#3A3F4F}
+.home{display:flex;gap:18px;padding:18px 22px;border-radius:18px;background:linear-gradient(160deg,#2B3A55,#151B2E)}
+.home figure figcaption{color:#DDE2F2}
+</style>
+</head>
+<body>
+<h1>App icon variants</h1>
+<p class="lead">Adaptive Android icon: navy background layer, drawing in the foreground layer. Everything important sits inside the safe circle in the middle, so it survives every shape a phone cuts the icon into. The last column is the single-colour layer used when "themed icons" are on. Sizes: 192 px (store / settings), 96 px and 48 px (home screen and notification shade).</p>
+
+<section id="v1">
+  <h2>1 · Quiet as a mouse</h2>
+  <p>A mouse with a small speech bubble whose wave gets lower: "talk more quietly". In German: mucksmäuschenstill.</p>
+  <div class="row"></div>
+</section>
+
+<section id="v2">
+  <h2>2 · The lion may not roar</h2>
+  <p>The king of loud roars with its mouth wide open, but the roar is crossed out, like the elephant's trumpet.</p>
+  <div class="row"></div>
+</section>
+
+<section id="v3">
+  <h2>3 · The elephant may not trumpet</h2>
+  <p>Known for being loud and clumsy (the elephant in the china shop). Only the head, trumpeting, but the loud sound is crossed out: the well-known mute sign.</p>
+  <div class="row"></div>
+</section>
+
+<section>
+  <h2>Side by side on a home screen</h2>
+  <p>At real size (about 56 px) next to each other.</p>
+  <div class="home" id="home"></div>
+</section>
+
+<script>
+// Foreground drawings on the 108 x 108 adaptive-icon canvas; the visible part is 18..90,
+// the safe circle has radius 33 around the centre (54, 54). `c` maps colours, so the same
+// drawing renders in colour and as the single-colour themed version.
+const bubble = (c, fill = c.amber) => `
+  <path d="M64 31 h10 a5.5 5.5 0 0 1 5.5 5.5 v5 a5.5 5.5 0 0 1 -5.5 5.5 h-6 l-6.5 6.5 l1.5 -6.6 a5.5 5.5 0 0 1 -4.5 -5.4 v-5 a5.5 5.5 0 0 1 5.5 -5.5 z" fill="${fill}"/>
+  <path d="M61.5 39.5 q2 -6 4 0 q1.8 4.4 3.6 0 q1.6 -3 3.2 0 q1.4 1.8 2.8 0 q1.2 -1 2.4 0" fill="none"
+        stroke="${c.bg === "transparent" ? "#3A3F4F" : c.bg}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+const mutedSound = (c, cx, cy, dir, radii = [7, 14]) => {
+  const arc = r => {
+    const h = r * 0.72, w = Math.sqrt(r * r - h * h);
+    const x = cx + dir * w;
+    return `M${x} ${cy - h} a${r} ${r} 0 0 ${dir > 0 ? 1 : 0} 0 ${2 * h}`;
+  };
+  const mid = (radii[0] + radii[radii.length - 1]) / 2;
+  const mx = cx + dir * mid, k = 3.6;
+  const cross = `M${mx - k} ${cy - k} l${2 * k} ${2 * k} M${mx + k} ${cy - k} l${-2 * k} ${2 * k}`;
+  return `<path d="${radii.map(arc).join(" ")}" fill="none" stroke="${c.teal}" stroke-width="3" stroke-linecap="round"/>
+    <path d="${cross}" stroke="${c.bg === "transparent" ? "#3A3F4F" : c.bg}" stroke-width="6" stroke-linecap="round"/>
+    <path d="${cross}" stroke="${c.x}" stroke-width="3.2" stroke-linecap="round"/>`;
+};
+const variants = {
+  v1: c => `<g transform="translate(2 1)">
+    <circle cx="33" cy="49" r="10" fill="${c.fur2}"/><circle cx="33" cy="49" r="5.5" fill="${c.ear}"/>
+    <circle cx="57" cy="49" r="10" fill="${c.fur2}"/><circle cx="57" cy="49" r="5.5" fill="${c.ear}"/>
+    <ellipse cx="45" cy="64" rx="15" ry="13.5" fill="${c.fur}"/>
+    <path d="M37.5 62 q2.5 2.4 5 0 M47.5 62 q2.5 2.4 5 0" fill="none" stroke="${c.ink}" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="45" cy="69" r="2.4" fill="${c.nose}"/>
+    <path d="M40 70 l-9 -1.5 M40 72 l-8.5 2 M50 70 l9 -1.5 M50 72 l8.5 2" stroke="${c.whisker}" stroke-width="1" stroke-linecap="round"/></g>
+    ${bubble(c)}`,
+  v2: c => `<g transform="translate(4 0)">
+    <circle cx="51.0" cy="60.0" r="6" fill="${c.mane}"/>
+    <circle cx="48.9" cy="67.0" r="6" fill="${c.mane}"/>
+    <circle cx="43.4" cy="71.8" r="6" fill="${c.mane}"/>
+    <circle cx="36.1" cy="72.9" r="6" fill="${c.mane}"/>
+    <circle cx="29.5" cy="69.8" r="6" fill="${c.mane}"/>
+    <circle cx="25.5" cy="63.7" r="6" fill="${c.mane}"/>
+    <circle cx="25.5" cy="56.3" r="6" fill="${c.mane}"/>
+    <circle cx="29.5" cy="50.2" r="6" fill="${c.mane}"/>
+    <circle cx="36.1" cy="47.1" r="6" fill="${c.mane}"/>
+    <circle cx="43.4" cy="48.2" r="6" fill="${c.mane}"/>
+    <circle cx="48.9" cy="53.0" r="6" fill="${c.mane}"/>
+    <circle cx="38" cy="60" r="13" fill="${c.mane}"/>
+    <circle cx="41" cy="48.5" r="3.6" fill="${c.lion}"/>
+    <ellipse cx="44" cy="58" rx="11" ry="10" fill="${c.lion}"/>
+    <path d="M47 51 h11 a5 5 0 0 1 5 5 v1 a2 2 0 0 1 -2 2 h-14 z" fill="${c.lion}"/>
+    <path d="M47 64 h11 a3 3 0 0 1 3 3 v0.5 a3 3 0 0 1 -3 3 h-8 a4 4 0 0 1 -3 -1.5 z" fill="${c.lion}"/>
+    <path d="M47 59 h14 l0 1 q-1 4 -3 4 h-11 z" fill="${c.ink}"/>
+    <path d="M51 64.2 q4 -2.6 8 0 z" fill="${c.nose}"/>
+    <path d="M58.5 59 l1.2 2.8 l1.2 -2.8 z M58 64 l1 -2.3 l1 2.3 z" fill="${c.tusk}"/>
+    <circle cx="61.8" cy="53" r="1.7" fill="${c.ink}"/>
+    <circle cx="50.5" cy="54.5" r="1.6" fill="${c.ink}"/>
+    <path d="M47.5 51.5 l5.5 1.2" stroke="${c.ink}" stroke-width="1.5" stroke-linecap="round"/>
+    ${mutedSound(c, 62, 62, 1)}</g>`,
+  v3: c => `<g transform="translate(0 3)"><g transform="translate(46 44) scale(0.85) translate(-46 -44) translate(108 0) scale(-1 1)">
+    <circle cx="48" cy="64" r="15.5" fill="${c.ele}"/>
+    <path d="M58 71 q15 -2 15 -18 q0 -15 -12 -17" fill="none" stroke="${c.ele}" stroke-width="7.5" stroke-linecap="round"/>
+    <ellipse cx="59" cy="36" rx="3" ry="5" fill="${c.ele}"/>
+    <ellipse cx="57.4" cy="36" rx="1" ry="2.2" fill="${c.ele2}"/>
+    <path d="M55 76 q5 4 11 1" fill="none" stroke="${c.tusk}" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M42 51 q-14 -2 -16 12 q-1 13 12 17 q5 1 7 -4 q-3 -6 -3 -12 q0 -7 3 -11 z" fill="${c.ele2}"/>
+    <circle cx="53" cy="61" r="2.2" fill="${c.ink}"/></g>
+    ${mutedSound(c, 49.5, 37.5, 1, [6, 12, 18])}</g>`,
+};
+
+
+const colour = {bg: "#0F1424", amber: "#F5B454", teal: "#5DD6B5", fur: "#C9CEE6", fur2: "#AEB5D0", ear: "#E9A49A", nose: "#FF8A7A", ink: "#0F1424", whisker: "#8890B0", owl: "#B98A55", face: "#F2E2C4", ele: "#9AA4C4", ele2: "#7E88AA", x: "#FF8A7A", tusk: "#F2EEE4", mane: "#D98A3D", lion: "#F2C27A", muzzle: "#FBE3B8"};
+const mono = {bg: "transparent", amber: "#E6E9F5", teal: "#E6E9F5", fur: "#E6E9F5", fur2: "#C4C8D6", ear: "#3A3F4F", nose: "#3A3F4F", ink: "#3A3F4F", whisker: "#C4C8D6", owl: "#E6E9F5", face: "#3A3F4F", ele: "#E6E9F5", ele2: "#C4C8D6", x: "#E6E9F5", tusk: "#3A3F4F", mane: "#C4C8D6", lion: "#E6E9F5", muzzle: "#E6E9F5"};
+
+let uid = 0;
+function svg(key, c, safe = false) {
+  // Unique mask ids per copy, otherwise every icon would use the first one's mask.
+  const n = ++uid;
+  const body = variants[key](c).replace(/moon(\d)/g, `moon$1_${n}`);
+  const guide = safe ? `<circle cx="54" cy="54" r="33" fill="none" stroke="#FF8A7A" stroke-width=".8" stroke-dasharray="2 2"/>` : "";
+  return `<svg viewBox="18 18 72 72" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="108" height="108" fill="${c.bg}"/>${body}${guide}</svg>`;
+}
+
+function icon(key, shape, size, c = colour, extra = "", safe = false) {
+  return `<span class="icon ${shape} ${extra}" style="width:${size}px;height:${size}px">${svg(key, c, safe)}</span>`;
+}
+
+for (const key of Object.keys(variants)) {
+  const row = document.querySelector(`#${key} .row`);
+  row.innerHTML = [
+    [icon(key, "square", 192, colour, "", true), "192 px · safe circle"],
+    [icon(key, "circle", 192), "circle"],
+    [icon(key, "squircle", 96), "squircle 96"],
+    [icon(key, "square", 96), "rounded square 96"],
+    [icon(key, "circle", 48), "48"],
+    [icon(key, "circle", 96, mono, "mono-bg"), "themed (single colour)"],
+  ].map(([html, cap]) => `<figure>${html}<figcaption>${cap}</figcaption></figure>`).join("");
+}
+
+document.getElementById("home").innerHTML = Object.keys(variants)
+  .map((key, i) => `<figure>${icon(key, "circle", 56)}<figcaption>Variant ${i + 1}</figcaption></figure>`)
+  .join("");
+</script>
+</body>
+</html>

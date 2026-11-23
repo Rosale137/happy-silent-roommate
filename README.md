@@ -33,10 +33,15 @@ Completed:
   Stop button
 - The app ignores the microphone while the phone vibrates, so its own buzz never triggers the next one
 - Tested on a Pixel 8 with Murena /e/OS (Android 15). With Do Not Disturb on, the phone does not vibrate
+- Quiet time: listening starts and stops on its own (one daily window, may run past midnight).
+  Two modes to choose in the app: standby (waits in the background with a small notification and
+  starts by itself) or reminder (a notification at the start time, one tap starts listening).
+  After a phone restart, standby needs one tap on a notification
+- App icon: an elephant that may not trumpet (mockups of the other ideas in `docs/mockups/08-app-icon.html`)
 - HTML mockups of the planned screens in `docs/mockups` (open `index.html`)
 
 Next:
-- Whisper test as a reference line for the limit
+- Several quiet windows and weekdays
 
 ## Planned Features
 
@@ -48,13 +53,22 @@ Built step by step; each step is runnable on its own.
 - [x] Vibration feedback when the limit is exceeded
 - [x] Reminders that speed up and get stronger while you stay too loud, with hysteresis
 - [x] Foreground service, so it keeps listening with the screen off
-- [ ] Whisper test as a reference line; the limit is stored relative to it, with a "limit follows whisper" switch
-- [ ] Configurable quiet hours (several windows and weekdays), automatic start and stop
+- [x] Quiet time with automatic start and stop (one daily window)
+- [ ] Several quiet windows and weekdays
 - [ ] Settings screen: choice of vibration patterns, pause button, units
-- [ ] Extras: statistics, quick-settings tile, recalibration reminder
+- [ ] Extras: statistics, quick-settings tile
 - [ ] Later: only listen when at home (geolocation)
 
 ### Optional features to come
+
+- Whisper test: whisper for a few seconds to set a reference line, and keep the limit relative
+  to it, so it adapts when the phone lies in a different place. Left out for now because the
+  limit can be dragged directly in the plot and is saved; worth adding if the phone placement
+  varies a lot. Would come with a recalibration reminder.
+
+- Animated mascot: the app's animal (from the app icon) is shown on the main screen and reacts
+  to the level, calm and content while you are quiet, more and more alarmed as you get close to
+  or above the limit.
 
 - Fitness band or smartwatch: forward the "too loud" buzz to a band on the wrist, for example
   via [Gadgetbridge](https://gadgetbridge.org/) (works without Google services, so also on
