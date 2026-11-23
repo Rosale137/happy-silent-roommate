@@ -91,6 +91,7 @@ fun ScopeView(
     onWindowSecondsChange: (Float) -> Unit,
     limitDb: Float,
     onLimitChange: (Float) -> Unit,
+    hysteresisDb: Float,
     modifier: Modifier = Modifier,
 ) {
     val measurer = rememberTextMeasurer()
@@ -199,6 +200,18 @@ fun ScopeView(
                         strokeWidth = 3.dp.toPx(),
                     )
                 }
+            }
+
+            // Where the hysteresis ends: after a buzz the level must drop under this line.
+            if (hysteresisDb > 0f) {
+                val hy = y(limitDb - hysteresisDb)
+                drawLine(
+                    Amber.copy(alpha = 0.45f),
+                    Offset(leftPad, hy),
+                    Offset(size.width, hy),
+                    strokeWidth = 1.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f, 7f)),
+                )
             }
 
             // Limit line, reaching into the left margin where its pill sits.

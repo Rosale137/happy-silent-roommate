@@ -14,6 +14,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.Canvas
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.RangeSlider
+import androidx.compose.material3.Slider
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import io.github.rosale137.happysilentroommate.ui.theme.OnAmber
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,14 +34,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.rosale137.happysilentroommate.audio.AudioLevelMeter
 import io.github.rosale137.happysilentroommate.audio.averageDb
+import io.github.rosale137.happysilentroommate.settings.Settings
 import io.github.rosale137.happysilentroommate.ui.theme.Amber
 import io.github.rosale137.happysilentroommate.ui.theme.Coral
 import io.github.rosale137.happysilentroommate.ui.theme.HappysilentroommateTheme
 import io.github.rosale137.happysilentroommate.ui.theme.Surface1
 import io.github.rosale137.happysilentroommate.ui.theme.Teal
 import io.github.rosale137.happysilentroommate.ui.theme.TextMuted
+import io.github.rosale137.happysilentroommate.ui.theme.Track
+import io.github.rosale137.happysilentroommate.alerts.AlertPolicy
+import io.github.rosale137.happysilentroommate.alerts.AlertStrength
+import java.text.DecimalFormatSymbols
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
@@ -39,12 +56,31 @@ private const val SCOPE_HELP =
     "The plot shows the last 30 seconds, newest on the right.\n\n" +
         "Thin grey line: the volume in each tenth of a second.\n" +
         "Thick line: the integrated (averaged) volume. It turns coral when it is above the limit.\n\n" +
-        "Drag the dashed amber line up or down to set the limit.\n" +
+        "Drag the dashed amber line up or down to set the limit. " +
+        "The faint dotted line below it is where the hysteresis ends: you count as quieter " +
+        "again only once the level drops under it.\n" +
         "Drag the left edge of the shaded band left or right to set the integration time. " +
         "The band is the stretch that is averaged: longer ignores short laughs and coughs, " +
         "shorter reacts faster.\n\n" +
         "Values are dBFS, relative to the loudest the microphone can capture (0 is the maximum). " +
         "The plot shows -80 to -10: quieter values sit on the bottom edge, louder ones on the top edge."
+
+private const val ALERTS_HELP =
+    "The phone vibrates as soon as the thick line goes above the limit.\n\n" +
+        "Reminders: while you stay too loud, the next buzz comes after the upper value " +
+        "(right handle). Every further reminder comes a bit sooner (each gap 30% shorter), " +
+        "until they come as often as the lower value (left handle). The arrows show this " +
+        "speed-up. Put both handles together for steady reminders.\n\n" +
+        "The buzzes also get stronger: first a soft single tap, then two firm taps, " +
+        "then a long buzz. The screen flashes along with them.\n\n" +
+        "Hysteresis: how many dB below the limit you have to get to count as quieter again " +
+        "(the dotted line on the plot). Dipping just under the limit and back up does not " +
+        "cause an extra buzz and keeps the speed-up.\n\n" +
+        "Calming down: once you are quieter, the urgency fades one step every 10 seconds. " +
+        "If you get loud again soon, the reminders continue fast and strong where they were; " +
+        "after a longer quiet time they start gently again.\n\n" +
+        "Tip: a shorter integration time (the shaded band) makes the buzzes stop sooner " +
+        "once you are quieter."
 
 private const val PRIVACY_HELP =
     "Nothing is recorded or stored. Only a level number is calculated, on this phone, " +
@@ -59,17 +95,18 @@ fun MonitorScreen(
     micGranted: Boolean,
     micError: String?,
     powers: List<Double>,
-    windowSeconds: Float,
-    onWindowSecondsChange: (Float) -> Unit,
-    limitDb: Float,
-    onLimitChange: (Float) -> Unit,
+    settings: Settings,
+    onSettingsChange: (Settings) -> Unit,
     onRequestMic: () -> Unit,
+    nextTestStrength: AlertStrength,
     onTestVibration: () -> Unit,
+    alertCount: Int,
+    lastAlertAt: Long?,
+    lastAlertStrength: AlertStrength?,
     modifier: Modifier = Modifier,
 ) {
-    val windowChunks = (windowSeconds * 1000 / AudioLevelMeter.CHUNK_MS).roundToInt().coerceAtLeast(1)
-    val average = averageDb(powers, windowChunks)
-    val above = average > limitDb
+    val average = averageDb(powers, settings.windowChunks)
+    val above = average > settings.limitDb
     val levelColor = if (above) Coral else Teal
 
     Column(
@@ -122,18 +159,59 @@ fun MonitorScreen(
                 color = levelColor,
                 fontWeight = FontWeight.SemiBold,
             )
+            Text(
+                when {
+                    lastAlertAt == null -> "No buzz yet"
+                    else -> {
+                        val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(lastAlertAt))
+                        val count = if (alertCount == 1) "1 buzz" else "$alertCount buzzes"
+                        val strength = lastAlertStrength?.let { ", ${it.label}" } ?: ""
+                        "$count · last at $time$strength"
+                    }
+                },
+                color = TextMuted,
+                fontSize = 13.sp,
+            )
 
             ScopeView(
                 powers = powers,
-                windowSeconds = windowSeconds,
-                onWindowSecondsChange = onWindowSecondsChange,
-                limitDb = limitDb,
-                onLimitChange = onLimitChange,
+                windowSeconds = settings.windowSeconds,
+                onWindowSecondsChange = { onSettingsChange(settings.copy(windowSeconds = it)) },
+                limitDb = settings.limitDb,
+                onLimitChange = { onSettingsChange(settings.copy(limitDb = it)) },
+                hysteresisDb = settings.hysteresisDb,
             )
 
             if (micError != null) {
                 Text("Microphone problem: $micError", color = Coral, fontSize = 13.sp)
             }
+        }
+
+        Card(spacing = 4.dp) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Alerts", fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                InfoButton(
+                    title = "When the phone vibrates",
+                    text = ALERTS_HELP +
+                        "\n\nWith your settings, while too loud: buzz, then after " +
+                        reminderSequenceText(settings),
+                )
+            }
+            LabeledSlider(
+                label = "Hysteresis",
+                valueText = "${settings.hysteresisDb.roundToInt()} dB",
+                value = settings.hysteresisDb,
+                range = 0f..Settings.HYSTERESIS_MAX_DB,
+                steps = Settings.HYSTERESIS_MAX_DB.roundToInt() - 1,
+                onChange = { onSettingsChange(settings.copy(hysteresisDb = it.roundToInt().toFloat())) },
+            )
+            ReminderRangeSlider(
+                fastestSeconds = settings.fastestRemindSeconds,
+                firstSeconds = settings.remindSeconds,
+                onChange = { fastest, first ->
+                    onSettingsChange(settings.copy(fastestRemindSeconds = fastest, remindSeconds = first))
+                },
+            )
         }
 
         Button(
@@ -145,7 +223,118 @@ fun MonitorScreen(
                 containerColor = Amber,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             ),
-        ) { Text("Test vibration", fontWeight = FontWeight.Bold) }
+        ) { Text("Test vibration: ${nextTestStrength.label}", fontWeight = FontWeight.Bold) }
+    }
+}
+
+private val AlertStrength.label: String
+    get() = when (this) {
+        AlertStrength.Gentle -> "gentle"
+        AlertStrength.Medium -> "medium"
+        AlertStrength.Strong -> "strong"
+    }
+
+/** E.g. "8 → 5.6 → 3.9 → 2.7 → 2 s, then every 2 s". */
+private fun reminderSequenceText(settings: Settings): String {
+    val gaps = AlertPolicy.reminderGapsMs(
+        (settings.remindSeconds * 1000).toLong(),
+        (settings.fastestRemindSeconds * 1000).toLong(),
+    )
+    fun s(ms: Long) = String.format(Locale.getDefault(), "%.1f", ms / 1000.0)
+        .removeSuffix("${DecimalFormatSymbols.getInstance().decimalSeparator}0")
+    return gaps.joinToString(" → ") { s(it) } + " s, then every ${s(gaps.last())} s"
+}
+
+/**
+ * One slider for the reminder gaps: right handle = first reminder (upper limit), left handle =
+ * fastest reminder (lower limit). The amber stretch between them carries arrows pointing to the
+ * lower limit, because the reminders speed up from right to left.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReminderRangeSlider(
+    fastestSeconds: Float,
+    firstSeconds: Float,
+    onChange: (fastest: Float, first: Float) -> Unit,
+) {
+    val range = Settings.REMIND_MIN_S..Settings.REMIND_MAX_S
+    Column {
+        Row {
+            Text("Reminders speed up", modifier = Modifier.weight(1f))
+            Text(
+                "every ${fastestSeconds.roundToInt()} s ← ${firstSeconds.roundToInt()} s",
+                color = Amber,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        RangeSlider(
+            value = fastestSeconds..firstSeconds,
+            onValueChange = { onChange(it.start.roundToInt().toFloat(), it.endInclusive.roundToInt().toFloat()) },
+            valueRange = range,
+            steps = (range.endInclusive - range.start).roundToInt() - 1,
+            colors = SliderDefaults.colors(thumbColor = Amber),
+            track = { state ->
+                val span = state.valueRange.endInclusive - state.valueRange.start
+                val from = (state.activeRangeStart - state.valueRange.start) / span
+                val to = (state.activeRangeEnd - state.valueRange.start) / span
+                Canvas(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(14.dp),
+                ) {
+                    val cy = size.height / 2
+                    drawLine(Track, Offset(0f, cy), Offset(size.width, cy), 4.dp.toPx(), StrokeCap.Round)
+                    val left = from * size.width
+                    val right = to * size.width
+                    if (right - left < 1f) return@Canvas
+                    drawRoundRect(
+                        Amber,
+                        topLeft = Offset(left, 0f),
+                        size = Size(right - left, size.height),
+                        cornerRadius = CornerRadius(size.height / 2),
+                    )
+                    // Chevrons "<" pointing to the lower limit, spread over the amber stretch.
+                    val step = 14.dp.toPx()
+                    val half = 4.dp.toPx()
+                    var x = right - step
+                    while (x - half > left + 4.dp.toPx()) {
+                        drawLine(OnAmber, Offset(x + half / 2, cy - half), Offset(x - half / 2, cy), 2.dp.toPx(), StrokeCap.Round)
+                        drawLine(OnAmber, Offset(x - half / 2, cy), Offset(x + half / 2, cy + half), 2.dp.toPx(), StrokeCap.Round)
+                        x -= step
+                    }
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun LabeledSlider(
+    label: String,
+    valueText: String,
+    value: Float,
+    range: ClosedFloatingPointRange<Float>,
+    steps: Int,
+    onChange: (Float) -> Unit,
+) {
+    Column {
+        Row {
+            Text(label, modifier = Modifier.weight(1f))
+            Text(valueText, color = Amber, fontWeight = FontWeight.Bold)
+        }
+        Slider(
+            value = value,
+            onValueChange = onChange,
+            valueRange = range,
+            steps = steps,
+            colors = SliderDefaults.colors(
+                thumbColor = Amber,
+                activeTrackColor = Amber,
+                inactiveTrackColor = Track,
+                activeTickColor = Amber,
+                inactiveTickColor = TextMuted,
+            ),
+        )
     }
 }
 
@@ -178,12 +367,14 @@ fun MonitorScreenPreview() {
             micGranted = true,
             micError = null,
             powers = powers,
-            windowSeconds = 4f,
-            onWindowSecondsChange = {},
-            limitDb = -35f,
-            onLimitChange = {},
+            settings = Settings(),
+            onSettingsChange = {},
             onRequestMic = {},
+            nextTestStrength = AlertStrength.Gentle,
             onTestVibration = {},
+            alertCount = 3,
+            lastAlertAt = 0L,
+            lastAlertStrength = AlertStrength.Medium,
         )
     }
 }
